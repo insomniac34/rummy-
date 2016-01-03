@@ -166,26 +166,55 @@ int main(int argc, char **argv) {
 						std::cout << card->getCardName() << std::endl;
 					}
 					//check for a numerical run
-					int runCount = 1, initialIdx = -1;
-					for (auto i = 0; i < suitToCardMappings[suit].size(); i++) {
-						auto currentVal = (suitToCardMappings[suit][i])->val;						
-						auto nextVal = i == suitToCardMappings[suit].size() - 1 ? -1 : (suitToCardMappings[suit][i+1])->val;
-						if (nextVal != -1) {
-							//printf("comparing %d to %d\n", (vals_indexOf(currentVal)+1), vals_indexOf(nextVal));
-							if (((vals_indexOf(currentVal)+1) == vals_indexOf(nextVal))) {								
-								runCount++;
-								if (runCount == 2) {
-									initialIdx = i;
-								}
+					bool RUN_POSSIBLE = true;
+					bool IS_RUN = false;
+					int index = 0;
+					int runCount = 1;
+					while (RUN_POSSIBLE) {
+						//if the current card's value + 1 is = to the next card's value, it's in numeric order
+						printf("Is current card's val plus one %d equal to the next card's val %d?\n", vals_indexOf((suitToCardMappings[suit][index])->val)+1, vals_indexOf((suitToCardMappings[suit][index+1])->val));
+						if (vals_indexOf((suitToCardMappings[suit][index])->val)+1 == vals_indexOf((suitToCardMappings[suit][index+1])->val)) {
+							runCount++;
+							printf("It is! Setting run count to %d\n", runCount);
+							if (runCount == 3) {
+								IS_RUN = true;
+								printf("runCount is now at minimum for a run: setting IS_RUN to true!\n");
 							}
 						}
-					}					
-					if (runCount >= 3) {
-
-						for (auto i = initialIdx; i < (initialIdx + runCount); i++) {
-							std::cout << (suitToCardMappings[suit][i])->getCardName() << " is in play!" << std::endl;
-							(suitToCardMappings[suit][i])->inPlay = true;
+						else {
+							printf("No!\n");
+							//now, we need to see if the previous run was valid
+							if (runCount == 2) {
+								printf("But there was 2 cards in order found, so resetting runCount to 1!\n");
+								runCount = 1;
+							}
+							else if (IS_RUN) {
+								printf("But it IS the end of a run! Setting all cards at index %d through index %d to played!\n", index-(runCount-1), index);
+								//if it is a run, then we need to set the cards in the run to be played
+								for (auto i = (index - (runCount-1)); i <= index; i++) {
+									(suitToCardMappings[suit][i])->inPlay = true;
+								}
+								printf("resetting run!\n");
+								runCount = 1;
+								IS_RUN = false;
+							}
 						}
+
+						index++;
+						if (index == suitToCardMappings[suit].size() - 1) {
+							RUN_POSSIBLE = false;
+							if (IS_RUN) {
+								//if it is a run, then we need to set the cards in the run to be played
+								for (auto i = (index - (runCount-1)); i <= index; i++) {
+									(suitToCardMappings[suit][i])->inPlay = true;
+								}								
+							}
+						}
+					}	
+					for (auto i = 0; i < suitToCardMappings[suit].size(); i++) {
+						if ((suitToCardMappings[suit][i])->inPlay) {
+							std::cout << (suitToCardMappings[suit][i])->getCardName() << " is in play!" << std::endl;	
+						}							
 					}
 				}
 			}
